@@ -1,5 +1,6 @@
 import os
 import json
+from typing import List
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,38 +19,44 @@ except Exception as e:
     tips = {}
     print(f"Error loading wellness_tips.json: {e}")
 
+
 # ---------- Create MCP server ----------
 
-# stateless_http + json_response is recommended for HTTP transport :contentReference[oaicite:1]{index=1}
+# HTTP-based MCP server (stateless + JSON response mode)
 mcp = FastMCP(
     name="WellnessTipsServer",
     stateless_http=True,
     json_response=True,
 )
 
-@mcp.tool()
-def get_wellness_tips(mood: str) -> list[str]:
-    """
-    MCP tool: return wellness tips for a mood.
 
-    This is what MCP clients (Claude Desktop, MCP Inspector, etc.) will call
-    using tools/call with name="get_wellness_tips".
+@mcp.tool()
+def get_wellness_tips(mood: str) -> List[str]:
     """
-    mood_norm = mood.lower()
+    MCP tool: return wellness tips for a given mood.
+
+    This tool will be visible to MCP clients as:
+      - name: "get_wellness_tips"
+      - argument: "mood" (string)
+    """
+    mood_norm = mood.lower().strip()
+
     if mood_norm in tips:
         return tips[mood_norm]
+
     return [
         "No tips available for this mood.",
-        "Try another mood like happy, sad, stressed, angry, anxious.",
+        "Try another mood like happy, sad, stressed, angry, anxious, frustrated, confused, or neutral.",
     ]
 
-# ---------- Create FastAPI app (for your chatbot) ----------
+
+# ---------- Create FastAPI app (REST + MCP) ----------
 
 app = FastAPI(title="Wellness MCP + REST Server")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # you can restrict later if needed
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,7 +68,7 @@ def root():
     return {
         "message": "Wellness MCP Server is running.",
         "rest_example": "/tips/happy",
-        "mcp_endpoint": "/mcp",   # <-- MCP HTTP endpoint
+        "mcp_endpoint": "/mcp",
     }
 
 
@@ -70,23 +77,24 @@ def get_tips_http(mood: str):
     """
     REST version for your Streamlit chatbot.
 
-    This keeps exactly the behaviour you had before.
+    This is the HTTP API that your Streamlit app calls via requests.get().
     """
-    mood_norm = mood.lower()
+    mood_norm = mood.lower().strip()
+
     if mood_norm in tips:
         return {"mood": mood_norm, "tips": tips[mood_norm]}
     else:
         return {
             "mood": mood_norm,
             "tips": [
-                "No tips available for this mood. "
-                "Try another mood like happy, sad, stressed, angry, anxious."
+                "No tips available for this mood.",
+                "Try another mood like happy, sad, stressed, angry, anxious, frustrated, confused, or neutral.",
             ],
         }
 
 
 # ---------- Mount MCP HTTP app under /mcp ----------
 
-# This exposes a full MCP HTTP endpoint at /mcp
-# Clients will send JSON-RPC (tools/list, tools/call, etc.) here.
+# Exposes the MCP server at /mcp
+# This will respond to MCP JSON-RPC over HTTP (tools/list, tools/call, etc.)
 app.mount("/mcp", mcp.streamable_http_app())
