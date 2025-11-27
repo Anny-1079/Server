@@ -1,0 +1,34 @@
+{
+  "happy": [
+    "Celebrate your happiness with gratitude journaling today.",
+    "Share your joy with a friend or family member."
+  ],
+  "sad": [
+    "Try a 10-minute mindful breathing exercise.",
+    "Write down three things you’re grateful for today."
+  ],
+  "stressed": [
+    "Do a 5-4-3-2-1 grounding technique to reduce anxiety.",
+    "Take a short walk outside and observe your surroundings."
+  ],
+  "angry": [
+    "Practice deep belly breathing for 5 minutes.",
+    "Write down what made you angry and reflect on your triggers calmly."
+  ],
+  "anxious": [
+    "Try progressive muscle relaxation for 10 minutes.",
+    "Write down your worries and rational responses to them."
+  ],
+  "frustrated": [
+    "Take a short break and do some deep breathing to reset your mind.",
+    "Write down the main cause of your frustration and one small action to improve it."
+  ],
+  "confused": [
+    "List out what is confusing you to gain clarity.",
+    "Take a 5-minute break and return to it with a fresh mind."
+  ],
+  "neutral": [
+  "Write down one thing you’re looking forward to this week.",
+  "Step outside for a few deep breaths of fresh air."
+]
+}
