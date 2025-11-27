@@ -1,28 +1,31 @@
 import os
 import json
-from typing import List
+from typing import List, Dict
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from mcp.server.fastmcp import FastMCP
 
-# ---------- Load wellness tips from JSON file ----------
+# ============================================================
+# 🔹 Load wellness tips from JSON file
+# ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(BASE_DIR, "wellness_tips.json")
 
 try:
     with open(file_path, "r", encoding="utf-8") as f:
-        tips = json.load(f)
+        tips: Dict[str, List[str]] = json.load(f)
 except Exception as e:
     tips = {}
     print(f"Error loading wellness_tips.json: {e}")
 
 
-# ---------- Create MCP server ----------
+# ============================================================
+# 🔹 Create MCP server (HTTP-based, JSON response mode)
+# ============================================================
 
-# HTTP-based MCP server (stateless + JSON response mode)
 mcp = FastMCP(
     name="WellnessTipsServer",
     stateless_http=True,
@@ -50,7 +53,9 @@ def get_wellness_tips(mood: str) -> List[str]:
     ]
 
 
-# ---------- Create FastAPI app (REST + MCP) ----------
+# ============================================================
+# 🔹 Create FastAPI app (REST + MCP)
+# ============================================================
 
 app = FastAPI(title="Wellness MCP + REST Server")
 
@@ -93,8 +98,22 @@ def get_tips_http(mood: str):
         }
 
 
-# ---------- Mount MCP HTTP app under /mcp ----------
+# ============================================================
+# 🔹 Mount MCP HTTP app under /mcp
+# ============================================================
 
 # Exposes the MCP server at /mcp
 # This will respond to MCP JSON-RPC over HTTP (tools/list, tools/call, etc.)
 app.mount("/mcp", mcp.streamable_http_app())
+
+
+# ============================================================
+# 🔹 Health check endpoint for Render
+# ============================================================
+
+@app.get("/healthz")
+def health_check():
+    """
+    Health check endpoint for Render.
+    """
+    return {"status": "ok"}
